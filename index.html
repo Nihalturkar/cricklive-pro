@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CrickLive Pro - Live Cricket Scores & Local Tournaments</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CrickLive">
+    <meta name="description" content="Live Cricket Scores, Hotstar-Style Match Center & Local Tournament Scorer">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Icons -->
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+
+    <!-- Splash screens (iOS) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/scorecard.css">
+    <link rel="stylesheet" href="css/ticker.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-inner">
+            <a href="#/" class="logo">
+                <span class="logo-icon">&#127951;</span>
+                <span class="logo-text">CrickLive<span class="logo-pro">Pro</span></span>
+            </a>
+            <nav class="nav-links" id="navLinks">
+                <a href="#/" class="nav-link active" data-route="/">
+                    <span class="nav-icon">&#127968;</span> Dashboard
+                </a>
+                <a href="#/tournaments" class="nav-link" data-route="/tournaments">
+                    <span class="nav-icon">&#127942;</span> Tournaments
+                </a>
+                <a href="#/teams" class="nav-link" data-route="/teams">
+                    <span class="nav-icon">&#128101;</span> Teams
+                </a>
+            </nav>
+            <button class="menu-toggle" id="menuToggle">&#9776;</button>
+        </div>
+    </header>
+
+    <!-- Main Content Area (Router Outlet) -->
+    <main id="app" class="app-main"></main>
+
+    <!-- Bottom Score Ticker -->
+    <div id="ticker" class="score-ticker">
+        <div class="ticker-label"><span class="live-dot"></span> LIVE</div>
+        <div class="ticker-track" id="tickerTrack"></div>
+    </div>
+
+    <!-- Modal Root -->
+    <div id="modalRoot"></div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts (order matters) -->
+    <script src="js/store.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/components/modal.js"></script>
+    <script src="js/components/toast.js"></script>
+    <script src="js/components/matchCard.js"></script>
+    <script src="js/components/batsmanPanel.js"></script>
+    <script src="js/components/bowlerPanel.js"></script>
+    <script src="js/components/overTimeline.js"></script>
+    <script src="js/components/commentary.js"></script>
+    <script src="js/components/scoreTicker.js"></script>
+    <script src="js/components/shareMatch.js"></script>
+    <script src="js/views/dashboard.js"></script>
+    <script src="js/views/matchCenter.js"></script>
+    <script src="js/views/teamManager.js"></script>
+    <script src="js/views/tournaments.js"></script>
+    <script src="js/views/localScorer.js"></script>
+    <script src="js/views/viewer.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- PWA Install Banner -->
+    <div id="installBanner" class="install-banner" style="display:none">
+        <div class="install-banner-content">
+            <div class="install-banner-icon">&#127951;</div>
+            <div class="install-banner-text">
+                <div class="install-banner-title">Install CrickLive Pro</div>
+                <div class="install-banner-desc">Add to home screen for app-like experience</div>
+            </div>
+            <button class="btn btn-success btn-sm" id="installBtn">Install</button>
+            <button class="install-banner-close" id="installDismiss">&times;</button>
+        </div>
+    </div>
+
+    <!-- Service Worker + PWA Install Logic -->
+    <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./sw.js').then(function (reg) {
+                console.log('SW registered:', reg.scope);
+            }).catch(function (err) {
+                console.log('SW registration failed:', err);
+            });
+        });
+    }
+
+    // PWA Install Prompt
+    var deferredPrompt = null;
+    var installBanner = document.getElementById('installBanner');
+    var installBtn = document.getElementById('installBtn');
+    var installDismiss = document.getElementById('installDismiss');
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Check if user has dismissed before
+        if (!localStorage.getItem('cricklive_install_dismissed')) {
+            setTimeout(function () {
+                installBanner.style.display = 'block';
+            }, 3000); // Show after 3 seconds
+        }
+    });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', function () {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function (result) {
+                    if (result.outcome === 'accepted') {
+                        if (typeof Toast !== 'undefined') {
+                            Toast.show({ message: 'App installed! Check your home screen', type: 'success', duration: 4000 });
+                        }
+                    }
+                    deferredPrompt = null;
+                    installBanner.style.display = 'none';
+                });
+            }
+        });
+    }
+
+    if (installDismiss) {
+        installDismiss.addEventListener('click', function () {
+            installBanner.style.display = 'none';
+            localStorage.setItem('cricklive_install_dismissed', '1');
+        });
+    }
+
+    // Detect standalone mode (already installed)
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        document.body.classList.add('pwa-standalone');
+    }
+    </script>
+
+    <style>
+    /* Install Banner */
+    .install-banner {
+        position: fixed;
+        bottom: calc(var(--ticker-height) + 8px);
+        left: 12px;
+        right: 12px;
+        z-index: 950;
+        animation: slideUp 0.4s ease;
+    }
+    .install-banner-content {
+        background: var(--bg-card);
+        border: 1px solid var(--accent-green);
+        border-radius: var(--radius-lg);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 30px rgba(0, 230, 118, 0.15);
+    }
+    .install-banner-icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    .install-banner-text {
+        flex: 1;
+        min-width: 0;
+    }
+    .install-banner-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    .install-banner-desc {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+    .install-banner-close {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 1.3rem;
+        cursor: pointer;
+        padding: 4px;
+        flex-shrink: 0;
+    }
+    .install-banner-close:hover {
+        color: var(--text-primary);
+    }
+
+    /* PWA Standalone adjustments */
+    .pwa-standalone .app-header {
+        padding-top: env(safe-area-inset-top, 0px);
+        height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+    }
+    .pwa-standalone .app-main {
+        padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+    }
+    .pwa-standalone .score-ticker {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        height: calc(var(--ticker-height) + env(safe-area-inset-bottom, 0px));
+    }
+    </style>
+</body>
+</html>
