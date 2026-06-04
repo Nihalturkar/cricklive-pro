@@ -4,27 +4,30 @@ var MatchCenterView = (function () {
     function renderApiMatch(params) {
         var id = params.id;
         var app = document.getElementById('app');
-        app.innerHTML = '<div class="match-center"><div class="loading-spinner"></div></div>';
+        app.innerHTML = '<div class="match-center"><div class="loading-spinner"></div><p class="text-center text-muted" style="margin-top:8px">Loading match...</p></div>';
 
-        var matchData = CricketAPI.getMockMatchDetail(id);
-        if (matchData) {
-            renderFullMatch(app, matchData);
-        } else {
-            CricketAPI.getMatchInfo(id).then(function (data) {
-                if (data) renderFullMatch(app, data);
-                else app.innerHTML = '<div class="match-center"><div class="empty-state"><div class="empty-state-icon">&#128556;</div><div class="empty-state-title">Match not found</div><br><a href="#/" class="btn btn-primary">Go Back</a></div></div>';
-            });
-        }
+        CricketAPI.getMatchInfo(id).then(function (data) {
+            if (data) {
+                renderFullMatch(app, data);
+                // Auto-refresh for live matches
+                if (data.matchStarted && !data.matchEnded) {
+                    CricketAPI.startPolling(id, function (updated) {
+                        if (updated) renderFullMatch(app, updated);
+                    }, 60000);
+                }
+            } else {
+                app.innerHTML = '<div class="match-center"><div class="empty-state"><div class="empty-state-icon">&#128556;</div><div class="empty-state-title">Match not found</div><div class="empty-state-desc">API data unavailable. Check your API key or try again.</div><br><a href="#/" class="btn btn-primary">Go Back</a></div></div>';
+            }
+        });
     }
 
     function renderFullMatch(app, match) {
         var isLive = match.matchStarted && !match.matchEnded;
         var scores = match.score || [];
-        var detail = match.mockDetail || {};
         var team1 = match.teams[0] || 'TBA';
         var team2 = match.teams[1] || 'TBA';
-        var t1Short = team1.substring(0, 3).toUpperCase();
-        var t2Short = team2.substring(0, 3).toUpperCase();
+        var t1Short = MatchCard.getShortName(match, team1);
+        var t2Short = MatchCard.getShortName(match, team2);
         var t1Color = MatchCard.getTeamColor(team1);
         var t2Color = MatchCard.getTeamColor(team2);
 
@@ -37,12 +40,12 @@ var MatchCenterView = (function () {
         html += '<div class="match-header ' + (isLive ? 'live' : '') + '">';
         html += '<div class="match-teams-row">';
         html += '<div class="match-team">';
-        html += '<div class="team-logo" style="background:' + t1Color + '">' + t1Short + '</div>';
+        html += MatchCard.getTeamLogo(match, team1, 'big');
         html += '<div><div class="team-name">' + team1 + '</div><div class="team-name-short">' + t1Short + '</div></div>';
         html += '</div>';
         html += '<div class="match-vs"><div class="vs-text">VS</div><div class="match-info-badge"><span class="badge badge-' + typeBadge.toLowerCase() + '">' + typeBadge + '</span></div></div>';
         html += '<div class="match-team away">';
-        html += '<div class="team-logo" style="background:' + t2Color + '">' + t2Short + '</div>';
+        html += MatchCard.getTeamLogo(match, team2, 'big');
         html += '<div><div class="team-name">' + team2 + '</div><div class="team-name-short">' + t2Short + '</div></div>';
         html += '</div>';
         html += '</div>';
@@ -106,46 +109,88 @@ var MatchCenterView = (function () {
         html += '</div>'; // score-display
         html += '</div>'; // match-header
 
-        // Batsmen Panel
-        if (detail.batsmen) {
-            html += BatsmanPanel.render(detail.batsmen);
+        // Scorecard data (if available from API)
+        var scorecard = match.scorecard || [];
+        if (scorecard.length > 0) {
+            // Render full scorecard from API
+            scorecard.forEach(function (inn) {
+                if (inn.batting && inn.batting.length > 0) {
+                    var batsmen = inn.batting.map(function (b) {
+                        return { name: b.batsman || b.name || '', runs: b.r || 0, balls: b.b || 0, fours: b['4s'] || 0, sixes: b['6s'] || 0, isStriker: false };
+                    });
+                    html += BatsmanPanel.render(batsmen.slice(0, 2));
+                }
+                if (inn.bowling && inn.bowling.length > 0) {
+                    var bowlers = inn.bowling.map(function (bw) {
+                        return { name: bw.bowler || bw.name || '', overs: bw.o || 0, maidens: bw.m || 0, runs: bw.r || 0, wickets: bw.w || 0 };
+                    });
+                    html += BowlerPanel.render(bowlers.slice(0, 1));
+                }
+            });
         }
 
-        // Bowler Panel
-        if (detail.bowlers) {
-            html += BowlerPanel.render(detail.bowlers);
-        }
-
-        // Over Timeline
-        if (detail.recentOvers) {
-            html += OverTimeline.render(detail.recentOvers);
-        }
-
-        // Tabs: Commentary | Info
+        // Tabs: Info
         html += '<div class="tabs">';
-        html += '<button class="tab active" onclick="MatchCenterView.switchTab(this, \'commentary\')">&#128172; Commentary</button>';
-        html += '<button class="tab" onclick="MatchCenterView.switchTab(this, \'info\')">&#8505;&#65039; Info</button>';
-        html += '</div>';
-
-        // Commentary Tab
-        html += '<div class="tab-content active" id="tab-commentary">';
-        if (detail.commentary) {
-            html += Commentary.render(detail.commentary);
-        } else {
-            html += '<div class="empty-state"><div class="empty-state-desc">Commentary not available for API matches on free tier</div></div>';
+        html += '<button class="tab active" onclick="MatchCenterView.switchTab(this, \'info\')">&#8505;&#65039; Match Info</button>';
+        if (scorecard.length > 0) {
+            html += '<button class="tab" onclick="MatchCenterView.switchTab(this, \'full-scorecard\')">&#128202; Full Scorecard</button>';
         }
         html += '</div>';
 
-        // Info Tab
-        html += '<div class="tab-content" id="tab-info">';
+        // Info Tab Content
+        html += '<div class="tab-content active" id="tab-info">';
         html += '<div class="card" style="margin-top:8px">';
         html += '<div style="font-size:.85rem;color:var(--text-secondary);line-height:2">';
         html += '<strong>Match:</strong> ' + (match.name || '') + '<br>';
         html += '<strong>Venue:</strong> ' + (match.venue || 'N/A') + '<br>';
         html += '<strong>Date:</strong> ' + (match.date || 'N/A') + '<br>';
         html += '<strong>Format:</strong> ' + (match.matchType || 'N/A') + '<br>';
+        if (match.seriesId) html += '<strong>Series ID:</strong> ' + match.seriesId + '<br>';
         html += '</div></div>';
         html += '</div>';
+
+        // Full Scorecard Tab (if available)
+        if (scorecard.length > 0) {
+            html += '<div class="tab-content" id="tab-full-scorecard">';
+            scorecard.forEach(function (inn, idx) {
+                html += '<h4 style="margin:16px 0 8px;font-size:.9rem;color:var(--text-secondary)">Innings ' + (idx + 1) + '</h4>';
+
+                // Batting
+                if (inn.batting && inn.batting.length > 0) {
+                    html += '<div class="table-wrap"><table class="data-table">';
+                    html += '<thead><tr><th>Batter</th><th class="text-center">R</th><th class="text-center">B</th><th class="text-center">4s</th><th class="text-center">6s</th><th class="text-center">SR</th><th>Out</th></tr></thead><tbody>';
+                    inn.batting.forEach(function (b) {
+                        var sr = b.b > 0 ? ((b.r / b.b) * 100).toFixed(1) : '-';
+                        html += '<tr><td>' + (b.batsman || '') + '</td>';
+                        html += '<td class="text-center" style="font-weight:700">' + (b.r || 0) + '</td>';
+                        html += '<td class="text-center">' + (b.b || 0) + '</td>';
+                        html += '<td class="text-center">' + (b['4s'] || 0) + '</td>';
+                        html += '<td class="text-center">' + (b['6s'] || 0) + '</td>';
+                        html += '<td class="text-center">' + sr + '</td>';
+                        html += '<td style="font-size:.7rem;color:var(--text-muted)">' + (b['dismissal-text'] || b.dismissal || 'not out') + '</td></tr>';
+                    });
+                    html += '</tbody></table></div>';
+                }
+
+                // Bowling
+                if (inn.bowling && inn.bowling.length > 0) {
+                    html += '<h4 style="margin:12px 0 8px;font-size:.85rem;color:var(--text-muted)">Bowling</h4>';
+                    html += '<div class="table-wrap"><table class="data-table">';
+                    html += '<thead><tr><th>Bowler</th><th class="text-center">O</th><th class="text-center">M</th><th class="text-center">R</th><th class="text-center">W</th><th class="text-center">Econ</th></tr></thead><tbody>';
+                    inn.bowling.forEach(function (bw) {
+                        var econ = bw.o > 0 ? (bw.r / bw.o).toFixed(2) : '-';
+                        html += '<tr><td>' + (bw.bowler || '') + '</td>';
+                        html += '<td class="text-center">' + (bw.o || 0) + '</td>';
+                        html += '<td class="text-center">' + (bw.m || 0) + '</td>';
+                        html += '<td class="text-center">' + (bw.r || 0) + '</td>';
+                        html += '<td class="text-center" style="font-weight:700;color:var(--accent-green)">' + (bw.w || 0) + '</td>';
+                        html += '<td class="text-center">' + econ + '</td></tr>';
+                    });
+                    html += '</tbody></table></div>';
+                }
+            });
+            html += '</div>';
+        }
 
         html += '</div>'; // match-center
         app.innerHTML = html;

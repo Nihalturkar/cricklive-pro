@@ -1,5 +1,5 @@
 /* ============ SERVICE WORKER - CrickLive Pro PWA ============ */
-var CACHE_NAME = 'cricklive-v1';
+var CACHE_NAME = 'cricklive-v2';
 var ASSETS = [
     './',
     './index.html',

@@ -1,22 +1,56 @@
-/* ============ CRICKET API + MOCK DATA ============ */
+/* ============ CRICKET API - REAL DATA ONLY ============ */
 var CricketAPI = (function () {
     var BASE_URL = 'https://api.cricapi.com/v1';
     var cache = {};
     var pollingIntervals = {};
+    var requestCount = 0;
+    var requestCountDate = '';
 
     function getApiKey() {
         return Store.getSettings().apiKey || '';
     }
 
-    function fetchWithCache(endpoint, params, ttl) {
-        var key = endpoint + JSON.stringify(params || {});
-        var cached = cache[key];
+    // Track daily API usage (100/day free limit)
+    function trackRequest() {
+        var today = new Date().toISOString().split('T')[0];
+        if (requestCountDate !== today) {
+            requestCount = 0;
+            requestCountDate = today;
+        }
+        requestCount++;
+        try {
+            localStorage.setItem('cricklive_api_usage', JSON.stringify({ count: requestCount, date: today }));
+        } catch (e) {}
+    }
+
+    function getUsage() {
+        try {
+            var data = JSON.parse(localStorage.getItem('cricklive_api_usage') || '{}');
+            var today = new Date().toISOString().split('T')[0];
+            if (data.date === today) {
+                requestCount = data.count || 0;
+                requestCountDate = today;
+            }
+        } catch (e) {}
+        return { used: requestCount, limit: 100, remaining: Math.max(0, 100 - requestCount) };
+    }
+
+    function fetchAPI(endpoint, params, ttl) {
+        var cacheKey = endpoint + JSON.stringify(params || {});
+        var cached = cache[cacheKey];
         if (cached && Date.now() - cached.time < (ttl || 30000)) {
             return Promise.resolve(cached.data);
         }
 
         var apiKey = getApiKey();
         if (!apiKey) {
+            return Promise.resolve(null);
+        }
+
+        // Check daily limit
+        var usage = getUsage();
+        if (usage.remaining <= 0) {
+            console.warn('CricAPI: Daily limit reached (100/day)');
             return Promise.resolve(null);
         }
 
@@ -27,78 +61,205 @@ var CricketAPI = (function () {
             });
         }
 
+        trackRequest();
+
         return fetch(url)
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data.status === 'success') {
-                    cache[key] = { data: data.data, time: Date.now() };
+                if (data.status === 'success' && data.data) {
+                    cache[cacheKey] = { data: data.data, time: Date.now() };
                     return data.data;
+                }
+                // Handle errors
+                if (data.reason) {
+                    console.warn('CricAPI Error:', data.reason);
                 }
                 return null;
             })
-            .catch(function () {
+            .catch(function (err) {
+                console.error('CricAPI Fetch Error:', err);
                 return null;
             });
     }
 
+    // =====================================================
+    //  ENDPOINTS
+    // =====================================================
+
+    // Get all current/recent matches
     function getCurrentMatches() {
-        var apiKey = getApiKey();
-        if (!apiKey) return Promise.resolve(getMockMatches());
+        if (!getApiKey()) return Promise.resolve([]);
 
-        return fetchWithCache('/currentMatches', {}, 60000).then(function (data) {
-            if (!data || data.length === 0) return getMockMatches();
-            return data.map(transformApiMatch);
+        return fetchAPI('/currentMatches', { offset: 0 }, 120000).then(function (data) {
+            if (!data || !Array.isArray(data)) return [];
+            return data
+                .filter(function (m) { return m && m.id; })
+                .map(transformMatch);
         });
     }
 
+    // Get list of all matches (upcoming + recent)
+    function getMatches() {
+        if (!getApiKey()) return Promise.resolve([]);
+
+        return fetchAPI('/matches', { offset: 0 }, 120000).then(function (data) {
+            if (!data || !Array.isArray(data)) return [];
+            return data
+                .filter(function (m) { return m && m.id; })
+                .map(transformMatch);
+        });
+    }
+
+    // Get specific match info
     function getMatchInfo(matchId) {
-        return fetchWithCache('/match_info', { id: matchId }, 30000).then(function (data) {
+        if (!getApiKey()) return Promise.resolve(null);
+
+        return fetchAPI('/match_info', { id: matchId }, 30000).then(function (data) {
             if (!data) return null;
-            return transformApiMatch(data);
+            return transformMatch(data);
         });
     }
 
-    function transformApiMatch(raw) {
+    // Get match scorecard (detailed batting/bowling)
+    function getMatchScorecard(matchId) {
+        if (!getApiKey()) return Promise.resolve(null);
+
+        return fetchAPI('/match_scorecard', { id: matchId }, 30000).then(function (data) {
+            if (!data) return null;
+            return transformScorecard(data);
+        });
+    }
+
+    // Get current series list
+    function getSeriesList() {
+        if (!getApiKey()) return Promise.resolve([]);
+
+        return fetchAPI('/series', { offset: 0 }, 300000).then(function (data) {
+            if (!data || !Array.isArray(data)) return [];
+            return data;
+        });
+    }
+
+    // =====================================================
+    //  DATA TRANSFORMERS
+    // =====================================================
+
+    /*
+     * CricAPI v1 match object fields:
+     * id, name, matchType (t20/odi/test), status,
+     * venue, date, dateTimeGMT,
+     * teams: ["India", "Australia"],
+     * teamInfo: [{name, shortname, img}],
+     * score: [{r, w, o, inning: "India Inning 1"}],
+     * matchStarted (bool), matchEnded (bool),
+     * fantasyEnabled, bbbEnabled, hasSquad,
+     * series_id, ...
+     */
+
+    function transformMatch(raw) {
         if (!raw) return null;
-        var teams = (raw.teams || []);
-        var score = raw.score || [];
+
+        var teams = raw.teams || [];
+        var teamInfo = raw.teamInfo || [];
+        var scores = raw.score || [];
+
+        // Extract team images from teamInfo
+        var teamImages = {};
+        var teamShortNames = {};
+        teamInfo.forEach(function (ti) {
+            if (ti && ti.name) {
+                teamImages[ti.name] = ti.img || '';
+                teamShortNames[ti.name] = ti.shortname || ti.name.substring(0, 3).toUpperCase();
+            }
+        });
+
+        // Parse scores
+        var parsedScores = scores.map(function (s) {
+            var inningStr = s.inning || '';
+            // "India Inning 1" -> "India"
+            var teamName = inningStr.replace(/\s+Inning.*$/i, '').trim();
+            return {
+                team: teamName,
+                inning: inningStr,
+                runs: s.r || 0,
+                wickets: s.w || 0,
+                overs: s.o || 0
+            };
+        });
+
+        // Determine match format badge
+        var matchType = (raw.matchType || '').toLowerCase();
+        var formatBadge = 'T20';
+        if (matchType === 'odi') formatBadge = 'ODI';
+        else if (matchType === 'test') formatBadge = 'TEST';
+        else if (matchType === 't20') formatBadge = 'T20';
+        else formatBadge = matchType.toUpperCase() || 'T20';
 
         return {
             id: raw.id,
             type: 'api',
             name: raw.name || '',
             status: raw.status || '',
-            matchType: raw.matchType || 'T20',
+            matchType: formatBadge,
             venue: raw.venue || '',
             date: raw.date || '',
             dateTimeGMT: raw.dateTimeGMT || '',
-            matchStarted: raw.matchStarted,
-            matchEnded: raw.matchEnded,
+            matchStarted: raw.matchStarted === true,
+            matchEnded: raw.matchEnded === true,
             teams: teams,
-            score: score.map(function (s) {
-                return {
-                    team: s.inning ? s.inning.replace(/ Inning.*/, '') : '',
-                    runs: s.r || 0,
-                    wickets: s.w || 0,
-                    overs: s.o || 0
-                };
-            })
+            teamInfo: teamInfo,
+            teamImages: teamImages,
+            teamShortNames: teamShortNames,
+            score: parsedScores,
+            seriesId: raw.series_id || '',
+            bbbEnabled: raw.bbbEnabled || false,
+            hasSquad: raw.hasSquad || false
         };
     }
 
-    function startPolling(id, callback, interval) {
-        stopPolling(id);
+    function transformScorecard(raw) {
+        if (!raw) return null;
+
+        var base = transformMatch(raw);
+        if (!base) return null;
+
+        // Scorecard has additional detailed innings data
+        // scorecard: [{batsman, bowler, ...}] per innings
+        base.scorecard = raw.scorecard || [];
+        return base;
+    }
+
+    // =====================================================
+    //  POLLING (for live match auto-update)
+    // =====================================================
+
+    function startPolling(matchId, callback, interval) {
+        stopPolling(matchId);
+
+        // Use smart interval: 60s for live to save API quota
+        var pollInterval = interval || 60000;
+
         var fn = function () {
-            getMatchInfo(id).then(callback);
+            // Check if we still have API quota
+            var usage = getUsage();
+            if (usage.remaining <= 5) {
+                console.warn('CricAPI: Low quota, stopping poll');
+                stopPolling(matchId);
+                return;
+            }
+            getMatchInfo(matchId).then(function (data) {
+                if (data && callback) callback(data);
+            });
         };
-        fn();
-        pollingIntervals[id] = setInterval(fn, interval || 30000);
+
+        fn(); // Immediate first call
+        pollingIntervals[matchId] = setInterval(fn, pollInterval);
     }
 
-    function stopPolling(id) {
-        if (pollingIntervals[id]) {
-            clearInterval(pollingIntervals[id]);
-            delete pollingIntervals[id];
+    function stopPolling(matchId) {
+        if (pollingIntervals[matchId]) {
+            clearInterval(pollingIntervals[matchId]);
+            delete pollingIntervals[matchId];
         }
     }
 
@@ -106,128 +267,37 @@ var CricketAPI = (function () {
         Object.keys(pollingIntervals).forEach(stopPolling);
     }
 
-    // ---- MOCK DATA (for demo without API key) ----
-    function getMockMatches() {
-        return [
-            {
-                id: 'mock_1',
-                type: 'mock',
-                name: 'India vs Australia, 3rd T20I',
-                status: 'India needs 32 runs in 10 balls',
-                matchType: 'T20',
-                venue: 'Wankhede Stadium, Mumbai',
-                date: '2026-06-04',
-                matchStarted: true,
-                matchEnded: false,
-                teams: ['India', 'Australia'],
-                score: [
-                    { team: 'Australia', runs: 217, wickets: 8, overs: 20 },
-                    { team: 'India', runs: 185, wickets: 4, overs: 18.2 }
-                ],
-                mockDetail: {
-                    batsmen: [
-                        { name: 'V Kohli', runs: 72, balls: 41, fours: 6, sixes: 4, isStriker: true },
-                        { name: 'H Pandya', runs: 28, balls: 14, fours: 2, sixes: 2, isStriker: false }
-                    ],
-                    bowlers: [
-                        { name: 'M Starc', overs: 3.2, maidens: 0, runs: 42, wickets: 1, economy: 12.6 }
-                    ],
-                    recentOvers: [
-                        { over: 18, balls: ['1', '0', '4', '6', 'W', '2'] },
-                        { over: 17, balls: ['4', '1', '2', '0', '6', '1'] }
-                    ],
-                    commentary: [
-                        { over: '18.2', text: 'Starc to Kohli, 2 runs, pushed through covers', runs: 2, type: 'normal' },
-                        { over: '18.1', text: 'Starc to Pandya, OUT! Caught at deep midwicket', runs: 0, type: 'wicket' },
-                        { over: '17.6', text: 'Cummins to Kohli, SIX! Smashed over long-on!', runs: 6, type: 'six' },
-                        { over: '17.5', text: 'Cummins to Kohli, FOUR! Driven through covers', runs: 4, type: 'boundary' },
-                        { over: '17.4', text: 'Cummins to Kohli, no run, dot ball', runs: 0, type: 'normal' },
-                        { over: '17.3', text: 'Cummins to Pandya, 1 run, flicked to leg', runs: 1, type: 'normal' },
-                        { over: '17.2', text: 'Cummins to Kohli, 2 runs, pulled to deep square', runs: 2, type: 'normal' },
-                        { over: '17.1', text: 'Cummins to Kohli, FOUR! Cut past point', runs: 4, type: 'boundary' }
-                    ]
-                }
-            },
-            {
-                id: 'mock_2',
-                type: 'mock',
-                name: 'England vs South Africa, 2nd ODI',
-                status: 'South Africa won by 5 wickets',
-                matchType: 'ODI',
-                venue: 'Lords, London',
-                date: '2026-06-04',
-                matchStarted: true,
-                matchEnded: true,
-                teams: ['England', 'South Africa'],
-                score: [
-                    { team: 'England', runs: 287, wickets: 10, overs: 48.3 },
-                    { team: 'South Africa', runs: 291, wickets: 5, overs: 46.2 }
-                ],
-                mockDetail: {
-                    batsmen: [
-                        { name: 'Q de Kock', runs: 104, balls: 98, fours: 12, sixes: 3, isStriker: false },
-                        { name: 'D Miller', runs: 67, balls: 52, fours: 5, sixes: 4, isStriker: true }
-                    ],
-                    bowlers: [
-                        { name: 'J Archer', overs: 9.2, maidens: 1, runs: 62, wickets: 2, economy: 6.64 }
-                    ],
-                    recentOvers: [
-                        { over: 46, balls: ['1', '4', '0', '2'] }
-                    ],
-                    commentary: [
-                        { over: '46.2', text: 'Archer to Miller, FOUR! Winning runs!', runs: 4, type: 'boundary' },
-                        { over: '46.1', text: 'Archer to de Kock, 1 run', runs: 1, type: 'normal' }
-                    ]
-                }
-            },
-            {
-                id: 'mock_3',
-                type: 'mock',
-                name: 'Pakistan vs New Zealand, 1st Test Day 2',
-                status: 'Pakistan trail by 128 runs',
-                matchType: 'Test',
-                venue: 'Rawalpindi Cricket Stadium',
-                date: '2026-06-03',
-                matchStarted: true,
-                matchEnded: false,
-                teams: ['Pakistan', 'New Zealand'],
-                score: [
-                    { team: 'New Zealand', runs: 342, wickets: 10, overs: 95.4 },
-                    { team: 'Pakistan', runs: 214, wickets: 6, overs: 62 }
-                ],
-                mockDetail: {
-                    batsmen: [
-                        { name: 'B Azam', runs: 89, balls: 142, fours: 10, sixes: 1, isStriker: true },
-                        { name: 'M Rizwan', runs: 34, balls: 67, fours: 3, sixes: 0, isStriker: false }
-                    ],
-                    bowlers: [
-                        { name: 'T Southee', overs: 18, maidens: 4, runs: 52, wickets: 3, economy: 2.89 }
-                    ],
-                    recentOvers: [
-                        { over: 62, balls: ['0', '0', '1', '0', '4', '0'] }
-                    ],
-                    commentary: [
-                        { over: '62.6', text: 'Southee to Rizwan, no run, defended', runs: 0, type: 'normal' },
-                        { over: '62.5', text: 'Southee to Azam, FOUR! Exquisite cover drive', runs: 4, type: 'boundary' }
-                    ]
-                }
-            }
-        ];
+    // =====================================================
+    //  API KEY VALIDATION
+    // =====================================================
+
+    function validateApiKey(key) {
+        var url = BASE_URL + '/matches?apikey=' + encodeURIComponent(key) + '&offset=0';
+        return fetch(url)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                return data.status === 'success';
+            })
+            .catch(function () {
+                return false;
+            });
     }
 
-    function getMockMatchDetail(id) {
-        var matches = getMockMatches();
-        return matches.find(function (m) { return m.id === id; }) || null;
-    }
+    // =====================================================
+    //  PUBLIC API
+    // =====================================================
 
     return {
+        getApiKey: getApiKey,
         getCurrentMatches: getCurrentMatches,
+        getMatches: getMatches,
         getMatchInfo: getMatchInfo,
+        getMatchScorecard: getMatchScorecard,
+        getSeriesList: getSeriesList,
         startPolling: startPolling,
         stopPolling: stopPolling,
         stopAllPolling: stopAllPolling,
-        getMockMatches: getMockMatches,
-        getMockMatchDetail: getMockMatchDetail,
-        getApiKey: getApiKey
+        validateApiKey: validateApiKey,
+        getUsage: getUsage
     };
 })();

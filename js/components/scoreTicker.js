@@ -28,8 +28,8 @@ var ScoreTicker = (function () {
         var scores = match.score || [];
         var isLive = match.matchStarted && !match.matchEnded;
         var html2 = '<div class="ticker-item" onclick="Router.navigate(\'' + route + '\')">';
-        var t1 = (match.teams[0] || 'TBA').substring(0, 3).toUpperCase();
-        var t2 = (match.teams[1] || 'TBA').substring(0, 3).toUpperCase();
+        var t1 = MatchCard.getShortName(match, match.teams[0] || 'TBA');
+        var t2 = MatchCard.getShortName(match, match.teams[1] || 'TBA');
 
         html2 += '<div class="ticker-team">';
         html2 += '<span class="ticker-team-name">' + t1 + '</span>';
