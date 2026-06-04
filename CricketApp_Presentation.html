@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrickBuzz Live - App Presentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-dark: #0a0a1a;
+            --bg-card: #12122a;
+            --bg-surface: #1a1a3e;
+            --accent-green: #00e676;
+            --accent-yellow: #ffd600;
+            --accent-red: #ff1744;
+            --accent-blue: #2979ff;
+            --accent-purple: #7c4dff;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --gradient-5: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --gradient-6: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-dark);
+            color: #fff;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* ============ NAVIGATION ============ */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #aaa;
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ============ SLIDES ============ */
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 100px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* ============ SLIDE 1: TITLE ============ */
+        .slide-title {
+            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%);
+            text-align: center;
+        }
+
+        .title-badge {
+            display: inline-block;
+            background: var(--gradient-4);
+            color: #000;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #4facfe 50%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-subtitle {
+            font-size: 1.4rem;
+            color: #888;
+            font-weight: 300;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+        .cricket-emoji {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ============ SLIDE 2: OVERVIEW ============ */
+        .slide-overview {
+            background: radial-gradient(ellipse at top right, #1a1040 0%, #0a0a1a 70%);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-number {
+            font-size: 0.8rem;
+            color: var(--accent-blue);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-top: 10px;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 36px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .feature-card:nth-child(1)::before { background: var(--gradient-3); }
+        .feature-card:nth-child(2)::before { background: var(--gradient-4); }
+        .feature-card:nth-child(3)::before { background: var(--gradient-5); }
+        .feature-card:nth-child(4)::before { background: var(--gradient-2); }
+        .feature-card:nth-child(5)::before { background: var(--gradient-1); }
+        .feature-card:nth-child(6)::before { background: var(--gradient-6); }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            color: #888;
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* ============ SLIDE 3: LIVE SCORES ============ */
+        .slide-live {
+            background: radial-gradient(ellipse at bottom left, #0a2040 0%, #0a0a1a 70%);
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .col-text h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+
+        .col-text p {
+            color: #888;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        .feature-list li .check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+        }
+
+        .check-green { background: rgba(0,230,118,0.15); color: var(--accent-green); }
+        .check-blue { background: rgba(41,121,255,0.15); color: var(--accent-blue); }
+        .check-yellow { background: rgba(255,214,0,0.15); color: var(--accent-yellow); }
+
+        /* Mock UI Preview */
+        .mock-phone {
+            background: #111;
+            border-radius: 30px;
+            padding: 20px;
+            border: 2px solid #333;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .mock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .mock-team {
+            text-align: center;
+        }
+
+        .mock-team-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.8rem;
+            margin: 0 auto 8px;
+        }
+
+        .mock-vs {
+            color: #666;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .mock-score-big {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid #222;
+            border-bottom: 1px solid #222;
+        }
+
+        .mock-score-big .score {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .mock-score-big .overs {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .mock-score-big .status {
+            color: var(--accent-green);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .mock-batsmen {
+            margin-top: 16px;
+        }
+
+        .mock-batsman-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.85rem;
+        }
+
+        .mock-batsman-name {
+            color: #ccc;
+            flex: 1;
+        }
+
+        .mock-batsman-name .striker { color: var(--accent-yellow); }
+
+        .mock-batsman-stats {
+            display: flex;
+            gap: 16px;
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .mock-batsman-stats .runs {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .mock-over-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+
+        .dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .dot-0 { background: #222; color: #666; }
+        .dot-1 { background: #1a2a1a; color: #aaa; }
+        .dot-4 { background: rgba(0,230,118,0.2); color: var(--accent-green); }
+        .dot-6 { background: rgba(255,214,0,0.2); color: var(--accent-yellow); }
+        .dot-w { background: rgba(255,23,68,0.2); color: var(--accent-red); }
+
+        /* ============ SLIDE 4: MATCH CENTER ============ */
+        .slide-matchcenter {
+            background: radial-gradient(ellipse at top, #1a0a30 0%, #0a0a1a 70%);
+        }
+
+        .ui-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1100px;
+            width: 100%;
+        }
+
+        .ui-preview-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .ui-preview-item .preview-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .ui-preview-item h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .ui-preview-item p {
+            color: #888;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        /* ============ SLIDE 5: LOCAL TOURNAMENT ============ */
+        .slide-local {
+            background: radial-gradient(ellipse at center right, #102a1a 0%, #0a0a1a 70%);
+        }
+
+        .flow-steps {
+            display: flex;
+            gap: 0;
+            max-width: 1100px;
+            width: 100%;
+            align-items: flex-start;
+        }
+
+        .flow-step {
+            flex: 1;
+            text-align: center;
+            padding: 30px 20px;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '';
+            position: absolute;
+            top: 60px;
+            right: -10px;
+            width: 20px;
+            height: 2px;
+            background: #333;
+        }
+
+        .flow-step:last-child::after { display: none; }
+
+        .flow-step-num {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin: 0 auto 16px;
+        }
+
+        .step-1 .flow-step-num { background: var(--gradient-3); color: #000; }
+        .step-2 .flow-step-num { background: var(--gradient-4); color: #000; }
+        .step-3 .flow-step-num { background: var(--gradient-5); color: #000; }
+        .step-4 .flow-step-num { background: var(--gradient-2); color: #000; }
+        .step-5 .flow-step-num { background: var(--gradient-1); color: #fff; }
+
+        .flow-step h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .flow-step p {
+            color: #888;
+            font-size: 0.8rem;
+            line-height: 1.6;
+        }
+
+        /* ============ SLIDE 6: SCORER ============ */
+        .slide-scorer {
+            background: radial-gradient(ellipse at bottom right, #2a1a0a 0%, #0a0a1a 70%);
+        }
+
+        .scorer-preview {
+            background: #111;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 450px;
+            width: 100%;
+            border: 2px solid #222;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .scorer-mini-score {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+            margin-bottom: 20px;
+        }
+
+        .scorer-mini-score .team-name {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .scorer-mini-score .score-text {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .scorer-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .scorer-btn {
+            padding: 16px 8px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-run { background: #1a2a3a; color: #4facfe; }
+        .btn-4 { background: rgba(0,230,118,0.15); color: var(--accent-green); font-size: 1.3rem; }
+        .btn-6 { background: rgba(255,214,0,0.15); color: var(--accent-yellow); font-size: 1.3rem; }
+        .btn-dot { background: #1a1a1a; color: #666; }
+
+        .scorer-extras {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .btn-extra {
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #1a1a1a;
+            color: #888;
+            border: 1px solid #333;
+        }
+
+        .btn-wicket {
+            grid-column: span 4;
+            padding: 14px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1rem;
+            background: rgba(255,23,68,0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(255,23,68,0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* ============ SLIDE 7: TECH STACK ============ */
+        .slide-tech {
+            background: radial-gradient(ellipse at center, #0a1a2a 0%, #0a0a1a 70%);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .tech-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .tech-card .tech-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .tech-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .tech-card p {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        /* ============ SLIDE 8: SCREENS ============ */
+        .slide-screens {
+            background: radial-gradient(ellipse at top left, #2a0a2a 0%, #0a0a1a 70%);
+        }
+
+        .screen-list {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .screen-item {
+            display: flex;
+            gap: 24px;
+            padding: 24px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .screen-item:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateX(8px);
+        }
+
+        .screen-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .screen-item:nth-child(1) .screen-num { background: var(--gradient-3); color: #000; }
+        .screen-item:nth-child(2) .screen-num { background: var(--gradient-4); color: #000; }
+        .screen-item:nth-child(3) .screen-num { background: var(--gradient-5); color: #000; }
+        .screen-item:nth-child(4) .screen-num { background: var(--gradient-1); color: #fff; }
+        .screen-item:nth-child(5) .screen-num { background: var(--gradient-2); color: #000; }
+        .screen-item:nth-child(6) .screen-num { background: var(--gradient-6); color: #000; }
+        .screen-item:nth-child(7) .screen-num { background: var(--gradient-3); color: #000; }
+
+        .screen-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .screen-info p {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        /* ============ SLIDE 9: ROADMAP ============ */
+        .slide-roadmap {
+            background: radial-gradient(ellipse at bottom, #1a2a0a 0%, #0a0a1a 70%);
+        }
+
+        .roadmap {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+        }
+
+        .roadmap::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 30px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-blue), var(--accent-green), var(--accent-yellow));
+        }
+
+        .roadmap-item {
+            display: flex;
+            gap: 24px;
+            padding: 20px 0;
+            align-items: flex-start;
+        }
+
+        .roadmap-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-left: 21px;
+            z-index: 1;
+        }
+
+        .roadmap-item:nth-child(1) .roadmap-dot { background: var(--accent-blue); box-shadow: 0 0 15px rgba(41,121,255,0.5); }
+        .roadmap-item:nth-child(2) .roadmap-dot { background: var(--accent-purple); box-shadow: 0 0 15px rgba(124,77,255,0.5); }
+        .roadmap-item:nth-child(3) .roadmap-dot { background: var(--accent-green); box-shadow: 0 0 15px rgba(0,230,118,0.5); }
+        .roadmap-item:nth-child(4) .roadmap-dot { background: var(--accent-yellow); box-shadow: 0 0 15px rgba(255,214,0,0.5); }
+        .roadmap-item:nth-child(5) .roadmap-dot { background: var(--accent-red); box-shadow: 0 0 15px rgba(255,23,68,0.5); }
+
+        .roadmap-content h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .roadmap-content p {
+            color: #888;
+            font-size: 0.85rem;
+            line-height: 1.7;
+        }
+
+        .roadmap-content .phase-tag {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .tag-blue { background: rgba(41,121,255,0.15); color: var(--accent-blue); }
+        .tag-purple { background: rgba(124,77,255,0.15); color: var(--accent-purple); }
+        .tag-green { background: rgba(0,230,118,0.15); color: var(--accent-green); }
+        .tag-yellow { background: rgba(255,214,0,0.15); color: var(--accent-yellow); }
+        .tag-red { background: rgba(255,23,68,0.15); color: var(--accent-red); }
+
+        /* ============ SLIDE 10: CTA ============ */
+        .slide-cta {
+            background: radial-gradient(ellipse at center, #1a1a3e 0%, #0a0a1a 70%);
+            text-align: center;
+        }
+
+        .cta-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #43e97b, #38f9d7, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 500px;
+        }
+
+        .cta-features {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cta-feature {
+            text-align: center;
+        }
+
+        .cta-feature .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .cta-feature .label {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .slide { padding: 80px 24px; }
+            .main-title { font-size: 2.5rem; }
+            .section-title { font-size: 2rem; }
+            .two-col { grid-template-columns: 1fr; }
+            .ui-preview-grid { grid-template-columns: 1fr 1fr; }
+            .flow-steps { flex-direction: column; }
+            .flow-step::after { display: none; }
+            .stats-row { flex-direction: column; gap: 20px; }
+            .nav-links { display: none; }
+            .cta-title { font-size: 2.2rem; }
+        }
+
+        /* Smooth scroll indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #444;
+            font-size: 0.8rem;
+            text-align: center;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .highlight { color: var(--accent-green); font-weight: 600; }
+        .highlight-blue { color: var(--accent-blue); font-weight: 600; }
+        .highlight-yellow { color: var(--accent-yellow); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-logo">CrickLive Pro</div>
+        <div class="nav-links">
+            <a href="#title">Home</a>
+            <a href="#overview">Features</a>
+            <a href="#live">Live Scores</a>
+            <a href="#matchcenter">Match Center</a>
+            <a href="#local">Local Tournament</a>
+            <a href="#scorer">Scorer</a>
+            <a href="#tech">Tech</a>
+            <a href="#screens">Screens</a>
+            <a href="#roadmap">Roadmap</a>
+        </div>
+    </nav>
+
+    <!-- ==================== SLIDE 1: TITLE ==================== -->
+    <section class="slide slide-title" id="title">
+        <div class="cricket-emoji">&#127951;</div>
+        <div class="title-badge">App Presentation 2026</div>
+        <h1 class="main-title">CrickLive Pro</h1>
+        <p class="main-subtitle">Live Cricket Scores, Hotstar-Style Match Center, aur Local Tournament System - Sab Ek App Mein!</p>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-number">7+</div>
+                <div class="stat-label">Screens</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">20+</div>
+                <div class="stat-label">Features</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Server Cost</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Free & Legal</div>
+            </div>
+        </div>
+
+        <div class="scroll-indicator">Scroll Down</div>
+    </section>
+
+    <!-- ==================== SLIDE 2: APP OVERVIEW ==================== -->
+    <section class="slide slide-overview" id="overview">
+        <div class="section-header">
+            <div class="section-number">01 - App Overview</div>
+            <h2 class="section-title">Kya Hai Is App Mein?</h2>
+            <p class="section-subtitle">6 Major Features jo is app ko professional banayenge</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">&#128225;</div>
+                <div class="feature-title">Live International Scores</div>
+                <div class="feature-desc">IPL, World Cup, T20I, ODI, Test - sabhi international matches ke <span class="highlight">real-time scores</span> free Cricket API se. Auto-refresh har 30 second mein.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128250;</div>
+                <div class="feature-title">Hotstar-Style Match Center</div>
+                <div class="feature-desc">Professional broadcast jaisa UI - <span class="highlight-blue">team logos, big score display, batsman/bowler panels</span>, over timeline dots, aur ball-by-ball commentary.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#127942;</div>
+                <div class="feature-title">Local Tournament System</div>
+                <div class="feature-desc">Apni <span class="highlight-yellow">local teams create karo</span>, tournaments banao (T20/ODI/Custom), fixtures auto-generate, aur points table dekho.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#127919;</div>
+                <div class="feature-title">Ball-by-Ball Scorer</div>
+                <div class="feature-desc">Mobile-friendly scoring interface - har ball ka score karo. <span class="highlight">Runs, extras, wickets</span> - sab kuch track hoga with undo support.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128218;</div>
+                <div class="feature-title">Live Score Ticker</div>
+                <div class="feature-desc">TV broadcast jaisa <span class="highlight-blue">bottom ticker bar</span> jo sabhi live matches ke scores scroll karta hai. Click karke match details dekho.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">&#128241;</div>
+                <div class="feature-title">Responsive Design</div>
+                <div class="feature-desc"><span class="highlight-yellow">Mobile-first dark theme</span> design. Phone, tablet, aur desktop - har screen pe perfect dikhega. Touch-friendly buttons.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 3: LIVE SCORES ==================== -->
+    <section class="slide slide-live" id="live">
+        <div class="section-header">
+            <div class="section-number">02 - Live Scores System</div>
+            <h2 class="section-title">Real-Time Cricket Scores</h2>
+            <p class="section-subtitle">Free Cricket API se live data, professional UI mein</p>
+        </div>
+
+        <div class="two-col">
+            <div class="col-text">
+                <h3>Free API se <span class="highlight">Live Updates</span></h3>
+                <p>CricAPI (cricketdata.org) ka free tier use karenge - 100 requests/day bilkul FREE. Har ongoing match ka data real-time mein milega.</p>
+
+                <ul class="feature-list">
+                    <li>
+                        <span class="check check-green">&#10003;</span>
+                        IPL, World Cup, T20I, ODI, Test matches
+                    </li>
+                    <li>
+                        <span class="check check-green">&#10003;</span>
+                        Auto-refresh har 30 seconds mein
+                    </li>
+                    <li>
+                        <span class="check check-blue">&#10003;</span>
+                        Smart caching - API calls save karta hai
+                    </li>
+                    <li>
+                        <span class="check check-blue">&#10003;</span>
+                        Offline mode with demo/mock data
+                    </li>
+                    <li>
+                        <span class="check check-yellow">&#10003;</span>
+                        Score change pe animation (bounce effect)
+                    </li>
+                    <li>
+                        <span class="check check-yellow">&#10003;</span>
+                        Wicket pe red flash notification
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-visual">
+                <div class="mock-phone">
+                    <div class="mock-header">
+                        <div class="mock-team">
+                            <div class="mock-team-logo" style="background: linear-gradient(135deg, #0066cc, #004499);">IND</div>
+                            <div style="font-size: 0.8rem; color: #aaa;">India</div>
+                        </div>
+                        <div class="mock-vs">
+                            <div><span class="live-dot"></span>LIVE</div>
+                            <div style="color: #444; font-size: 0.7rem; margin-top: 4px;">T20I</div>
+                        </div>
+                        <div class="mock-team">
+                            <div class="mock-team-logo" style="background: linear-gradient(135deg, #ffcc00, #cc9900);">AUS</div>
+                            <div style="font-size: 0.8rem; color: #aaa;">Australia</div>
+                        </div>
+                    </div>
+
+                    <div class="mock-score-big">
+                        <div class="score">185/4</div>
+                        <div class="overs">(18.2 overs)</div>
+                        <div class="status">India needs 32 runs in 10 balls</div>
+                    </div>
+
+                    <div class="mock-batsmen">
+                        <div class="mock-batsman-row">
+                            <div class="mock-batsman-name"><span class="striker">*</span> V Kohli</div>
+                            <div class="mock-batsman-stats">
+                                <span class="runs">72</span>
+                                <span>41b</span>
+                                <span>6x4</span>
+                                <span>4x6</span>
+                            </div>
+                        </div>
+                        <div class="mock-batsman-row">
+                            <div class="mock-batsman-name">&nbsp;&nbsp;H Pandya</div>
+                            <div class="mock-batsman-stats">
+                                <span class="runs">28</span>
+                                <span>14b</span>
+                                <span>2x4</span>
+                                <span>2x6</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mock-over-dots">
+                        <div class="dot dot-1">1</div>
+                        <div class="dot dot-0">0</div>
+                        <div class="dot dot-4">4</div>
+                        <div class="dot dot-6">6</div>
+                        <div class="dot dot-w">W</div>
+                        <div class="dot dot-1">2</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 4: MATCH CENTER ==================== -->
+    <section class="slide slide-matchcenter" id="matchcenter">
+        <div class="section-header">
+            <div class="section-number">03 - Match Center UI</div>
+            <h2 class="section-title">Hotstar-Style Match Center</h2>
+            <p class="section-subtitle">Professional broadcast quality ka UI - har detail dikhega</p>
+        </div>
+
+        <div class="ui-preview-grid">
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#9917;</div>
+                <h4>Team Header Bar</h4>
+                <p>Team logos, names, format badge (T20/ODI/TEST), venue info, toss details. Gradient header with team colors.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#128290;</div>
+                <h4>Big Score Display</h4>
+                <p>Large font "185/4 (18.2)" with current run rate, required run rate, aur target line. Score change pe bounce animation.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#127951;</div>
+                <h4>Batsman Panel</h4>
+                <p>Dono batsmen ki stats - Runs, Balls, 4s, 6s, Strike Rate. Striker highlight with bat icon.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#127936;</div>
+                <h4>Bowler Panel</h4>
+                <p>Current bowler ki stats - Overs, Maidens, Runs, Wickets, Economy rate.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#128308;</div>
+                <h4>Over Timeline</h4>
+                <p>Visual colored dots - Gray (dot), White (1-3), Green (4), Yellow (6), Red (W), Blue (wide/no-ball).</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#128172;</div>
+                <h4>Ball Commentary</h4>
+                <p>Ball-by-ball text commentary feed. Wickets highlighted in red, boundaries in green/yellow.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#128202;</div>
+                <h4>Full Scorecard Tab</h4>
+                <p>Complete batting aur bowling tables for each innings. Fall of wickets included.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#128101;</div>
+                <h4>Partnership Bar</h4>
+                <p>Current partnership ke runs aur balls ka horizontal progress bar.</p>
+            </div>
+            <div class="ui-preview-item">
+                <div class="preview-icon">&#127881;</div>
+                <h4>Celebrations</h4>
+                <p>Four pe green flash, Six pe gold sparkle, Wicket pe red overlay animation!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 5: LOCAL TOURNAMENT ==================== -->
+    <section class="slide slide-local" id="local">
+        <div class="section-header">
+            <div class="section-number">04 - Local Tournament System</div>
+            <h2 class="section-title">Apna Tournament, Apna Style!</h2>
+            <p class="section-subtitle">Local teams banao, tournaments organize karo, live score karo</p>
+        </div>
+
+        <div class="flow-steps">
+            <div class="flow-step step-1">
+                <div class="flow-step-num">1</div>
+                <h4>Teams Banao</h4>
+                <p>Team name, short name (3 letters), color choose karo, aur 11-16 players add karo with roles (Batsman, Bowler, All-rounder, Keeper)</p>
+            </div>
+            <div class="flow-step step-2">
+                <div class="flow-step-num">2</div>
+                <h4>Tournament Create</h4>
+                <p>Tournament name do, format select karo (T20/ODI/Custom), teams select karo. Fixtures auto-generate honge (round-robin)</p>
+            </div>
+            <div class="flow-step step-3">
+                <div class="flow-step-num">3</div>
+                <h4>Match Start</h4>
+                <p>Toss karo, batting/bowling decide karo, playing XI select karo, aur opener + bowler choose karo</p>
+            </div>
+            <div class="flow-step step-4">
+                <div class="flow-step-num">4</div>
+                <h4>Live Scoring</h4>
+                <p>Ball-by-ball scoring karo - runs, extras, wickets sab touch-friendly buttons se. Undo bhi available hai!</p>
+            </div>
+            <div class="flow-step step-5">
+                <div class="flow-step-num">5</div>
+                <h4>Results & Stats</h4>
+                <p>Points table auto-update, match results, player stats sab dekhiye. Professional scorecard bilkul same!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 6: SCORER INTERFACE ==================== -->
+    <section class="slide slide-scorer" id="scorer">
+        <div class="section-header">
+            <div class="section-number">05 - Ball-by-Ball Scorer</div>
+            <h2 class="section-title">Touch-Friendly Scorer</h2>
+            <p class="section-subtitle">Mobile pe score karo - jaise professional scorer karta hai</p>
+        </div>
+
+        <div class="two-col">
+            <div class="col-text">
+                <h3>Har Ball Ka <span class="highlight">Hisaab</span></h3>
+                <p>Professional scoring interface jo mobile pe bhi perfectly kaam kare. Large buttons, easy to use, aur sab kuch automatically calculate hota hai.</p>
+
+                <ul class="feature-list">
+                    <li>
+                        <span class="check check-green">&#10003;</span>
+                        <strong>Runs:</strong> 0, 1, 2, 3, 4, 6 - ek tap mein
+                    </li>
+                    <li>
+                        <span class="check check-blue">&#10003;</span>
+                        <strong>Extras:</strong> Wide, No Ball, Bye, Leg Bye
+                    </li>
+                    <li>
+                        <span class="check check-yellow">&#10003;</span>
+                        <strong>Wickets:</strong> Bowled, Caught, LBW, Run Out, Stumped, Hit Wicket
+                    </li>
+                    <li>
+                        <span class="check check-green">&#10003;</span>
+                        <strong>Undo:</strong> Galat entry? Ek button se undo
+                    </li>
+                    <li>
+                        <span class="check check-blue">&#10003;</span>
+                        <strong>Auto:</strong> Strike rotation, over change, new bowler prompt
+                    </li>
+                    <li>
+                        <span class="check check-yellow">&#10003;</span>
+                        <strong>Free Hit:</strong> No ball ke baad auto free hit indicator
+                    </li>
+                </ul>
+            </div>
+
+            <div class="col-visual">
+                <div class="scorer-preview">
+                    <div class="scorer-mini-score">
+                        <div class="team-name">Mohalla XI Batting</div>
+                        <div class="score-text">127/3 <span style="font-size: 1rem; color: #666;">(14.3 ov)</span></div>
+                    </div>
+
+                    <div class="scorer-buttons">
+                        <div class="scorer-btn btn-dot">0</div>
+                        <div class="scorer-btn btn-run">1</div>
+                        <div class="scorer-btn btn-run">2</div>
+                        <div class="scorer-btn btn-run">3</div>
+                    </div>
+
+                    <div class="scorer-buttons">
+                        <div class="scorer-btn btn-4">4</div>
+                        <div class="scorer-btn btn-6">6</div>
+                        <div class="scorer-btn btn-4" style="font-size:0.8rem;">4 LB</div>
+                        <div class="scorer-btn btn-6" style="font-size:0.8rem;">6 OT</div>
+                    </div>
+
+                    <div class="scorer-extras">
+                        <div class="btn-extra">WIDE</div>
+                        <div class="btn-extra">NO BALL</div>
+                        <div class="btn-extra">BYE</div>
+                        <div class="btn-extra">LEG BYE</div>
+                    </div>
+
+                    <div class="scorer-extras">
+                        <div class="btn-wicket">&#128308; WICKET</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 7: TECH STACK ==================== -->
+    <section class="slide slide-tech" id="tech">
+        <div class="section-header">
+            <div class="section-number">06 - Technology</div>
+            <h2 class="section-title">Tech Stack</h2>
+            <p class="section-subtitle">Simple, fast, aur zero server cost</p>
+        </div>
+
+        <div class="tech-grid">
+            <div class="tech-card">
+                <div class="tech-icon">&#127912;</div>
+                <h4>HTML5</h4>
+                <p>Semantic structure, Single Page Application shell</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#127752;</div>
+                <h4>CSS3</h4>
+                <p>Custom Properties, Flexbox, Grid, Animations, Dark Theme</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#9889;</div>
+                <h4>Vanilla JavaScript</h4>
+                <p>No framework dependency. Fast, lightweight, pure JS</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#128190;</div>
+                <h4>LocalStorage</h4>
+                <p>Teams, tournaments, match data - sab browser mein store</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#127760;</div>
+                <h4>Cricket API (Free)</h4>
+                <p>CricAPI.com - 100 req/day free. Live international scores</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#128241;</div>
+                <h4>Responsive Design</h4>
+                <p>Mobile-first. Works on phone, tablet, desktop</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#128640;</div>
+                <h4>Hash Router (SPA)</h4>
+                <p>Single page app with #/routes. No page reload</p>
+            </div>
+            <div class="tech-card">
+                <div class="tech-icon">&#128176;</div>
+                <h4>Zero Cost</h4>
+                <p>No server, no hosting fees. Pure client-side. Free deploy on GitHub Pages</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 8: ALL SCREENS ==================== -->
+    <section class="slide slide-screens" id="screens">
+        <div class="section-header">
+            <div class="section-number">07 - App Screens</div>
+            <h2 class="section-title">Saari Screens</h2>
+            <p class="section-subtitle">Poore app ke 7 main screens ka overview</p>
+        </div>
+
+        <div class="screen-list">
+            <div class="screen-item">
+                <div class="screen-num">1</div>
+                <div class="screen-info">
+                    <h4>Dashboard (Home Page)</h4>
+                    <p>Live international matches + local matches cards. Quick actions - Start Scoring, Create Tournament. "LIVE" pulse indicator for ongoing matches.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">2</div>
+                <div class="screen-info">
+                    <h4>Match Center (Hotstar UI)</h4>
+                    <p>Full scorecard view - team header, big score, batsmen/bowler panels, over dots, commentary, tabs for scorecard/info. Works for both API and local matches.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">3</div>
+                <div class="screen-info">
+                    <h4>Team Manager</h4>
+                    <p>Create/edit/delete teams. Add players with roles. Auto-generate team logo with color + initials. 11-16 players per team.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">4</div>
+                <div class="screen-info">
+                    <h4>Tournament Hub</h4>
+                    <p>Create tournaments (T20/ODI/Custom). Select teams, auto-generate fixtures (round-robin). Points table with NRR. Tournament status tracking.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">5</div>
+                <div class="screen-info">
+                    <h4>Ball-by-Ball Scorer</h4>
+                    <p>Mobile-friendly scoring interface. Run buttons, extras, wicket types. Auto strike rotation, over changes. Undo support. Free hit tracking.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">6</div>
+                <div class="screen-info">
+                    <h4>Score Ticker (Bottom Bar)</h4>
+                    <p>Always-visible bottom bar. Auto-scrolling scores of all live matches. Click to navigate to match. Pause on hover.</p>
+                </div>
+            </div>
+            <div class="screen-item">
+                <div class="screen-num">7</div>
+                <div class="screen-info">
+                    <h4>Settings</h4>
+                    <p>API key setup, theme preferences, data export/import (backup), about page with app info.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 9: ROADMAP ==================== -->
+    <section class="slide slide-roadmap" id="roadmap">
+        <div class="section-header">
+            <div class="section-number">08 - Development Roadmap</div>
+            <h2 class="section-title">Build Kaise Hoga?</h2>
+            <p class="section-subtitle">Step-by-step development phases</p>
+        </div>
+
+        <div class="roadmap">
+            <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-content">
+                    <span class="phase-tag tag-blue">PHASE 1 - Foundation</span>
+                    <h4>App Shell + Dark Theme + Router</h4>
+                    <p>HTML structure, CSS dark theme with variables, SPA hash router, navigation bar. Ye poori app ka skeleton hai.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-content">
+                    <span class="phase-tag tag-purple">PHASE 2 - Data Layer</span>
+                    <h4>API Integration + LocalStorage</h4>
+                    <p>Cricket API wrapper with caching, mock data fallback, LocalStorage CRUD for teams/tournaments/matches. Data models design.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-content">
+                    <span class="phase-tag tag-green">PHASE 3 - Core UI</span>
+                    <h4>Dashboard + Match Center + Ticker</h4>
+                    <p>Dashboard with match cards, Hotstar-style match center (score display, batsmen/bowler panels, over timeline, commentary), bottom score ticker.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-content">
+                    <span class="phase-tag tag-yellow">PHASE 4 - Local System</span>
+                    <h4>Teams + Tournaments + Scorer</h4>
+                    <p>Team manager, tournament creation with fixtures, ball-by-ball scorer interface with full extras/wicket handling. Points table auto-update.</p>
+                </div>
+            </div>
+            <div class="roadmap-item">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-content">
+                    <span class="phase-tag tag-red">PHASE 5 - Polish</span>
+                    <h4>Responsive + Animations + Testing</h4>
+                    <p>Mobile responsive design, score update animations, wicket celebrations, toast notifications, edge case handling, full testing on all screen sizes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SLIDE 10: CTA ==================== -->
+    <section class="slide slide-cta" id="cta">
+        <div class="cricket-emoji">&#128640;</div>
+        <h2 class="cta-title">Ready to Build!</h2>
+        <p class="cta-subtitle">Ye poora app pure HTML, CSS, JavaScript mein banega. No server cost. Free deploy. Professional quality.</p>
+
+        <div class="cta-features">
+            <div class="cta-feature">
+                <div class="icon">&#128161;</div>
+                <div class="label">100% Client-Side</div>
+            </div>
+            <div class="cta-feature">
+                <div class="icon">&#128176;</div>
+                <div class="label">Zero Server Cost</div>
+            </div>
+            <div class="cta-feature">
+                <div class="icon">&#127760;</div>
+                <div class="label">Free API</div>
+            </div>
+            <div class="cta-feature">
+                <div class="icon">&#128241;</div>
+                <div class="label">Mobile Friendly</div>
+            </div>
+            <div class="cta-feature">
+                <div class="icon">&#127752;</div>
+                <div class="label">Dark Theme</div>
+            </div>
+            <div class="cta-feature">
+                <div class="icon">&#9989;</div>
+                <div class="label">100% Legal</div>
+            </div>
+        </div>
+
+        <p style="margin-top: 60px; color: #444; font-size: 0.8rem;">CrickLive Pro - Made with Vanilla JS</p>
+    </section>
+
+</body>
+</html>
